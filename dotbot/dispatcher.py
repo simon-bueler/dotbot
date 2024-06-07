@@ -42,7 +42,14 @@ class Dispatcher:
                 ) and action != "defaults":
                     self._log.info("Skipping action %s" % action)
                     continue
+                # Create a list of loaded plugin names
+                loaded_plugins = [plugin.__class__.__name__ for plugin in self._plugins]
 
+                # Load plugins that haven't been loaded yet
+                for plugin in Plugin.__subclasses__():
+                    if plugin.__name__ not in loaded_plugins:
+                        self._plugins.append(plugin(self._context))
+                
                 handled = False
                 if action == "defaults":
                     self._context.set_defaults(task[action])  # replace, not update
@@ -74,15 +81,6 @@ class Dispatcher:
                     if self._exit:
                         # Invalid action exit
                         return False
-
-                if action == "plugins":
-                    # Create a list of loaded plugin names
-                    loaded_plugins = [plugin.__class__.__name__ for plugin in self._plugins]
-
-                    # Load plugins that haven't been loaded yet
-                    for plugin in Plugin.__subclasses__():
-                        if plugin.__name__ not in loaded_plugins:
-                            self._plugins.append(plugin(self._context))
 
         return success
 
